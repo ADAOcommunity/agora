@@ -6,7 +6,7 @@ Description: An effect that mutates governor settings
 An effect for mutating governor settings
 -}
 
-module Agora.Effects.GovernorMutation (mutateGovernorValidator) where
+module Agora.Effects.GovernorMutation (mutateGovernorValidator, PMutateGovernorDatum(..)) where
 
 --------------------------------------------------------------------------------
 
