@@ -1,3 +1,11 @@
+{- |
+Module     : Agora.Effects.GovernorMutation
+Maintainer : chfanghr@gmail.com
+Description: An effect that mutates governor settings
+
+An effect for mutating governor settings
+-}
+
 module Agora.Effects.GovernorMutation (mutateGovernorValidator) where
 
 --------------------------------------------------------------------------------
