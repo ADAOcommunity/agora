@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 {- |
 Module     : Agora.Effects.GovernorMutation
 Maintainer : chfanghr@gmail.com
@@ -5,13 +7,13 @@ Description: An effect that mutates governor settings
 
 An effect for mutating governor settings
 -}
-
-module Agora.Effects.GovernorMutation (mutateGovernorValidator, PMutateGovernorDatum(..)) where
+module Agora.Effects.GovernorMutation (mutateGovernorValidator, PMutateGovernorDatum (..), MutateGovernorDatum (..)) where
 
 --------------------------------------------------------------------------------
 
 import GHC.Generics qualified as GHC
 import Generics.SOP (Generic, I (I))
+import Prelude
 
 --------------------------------------------------------------------------------
 
@@ -26,6 +28,7 @@ import Plutarch.Api.V1 (
   PValidator,
  )
 import Plutarch.DataRepr (
+  DerivePConstantViaData (..),
   PDataFields,
   PIsDataReprInstances (PIsDataReprInstances),
  )
@@ -33,12 +36,26 @@ import Plutarch.Monadic qualified as P
 
 --------------------------------------------------------------------------------
 
-import Plutus.V1.Ledger.Api (CurrencySymbol)
+import Plutus.V1.Ledger.Api (CurrencySymbol, Datum, TxOutRef)
+import PlutusTx qualified
 
 --------------------------------------------------------------------------------
 
 import Agora.Effect (makeEffect)
 import Agora.Utils (isScriptAddress, passert, pfindDatum')
+import Plutarch.Lift (PLifted, PUnsafeLiftDecl)
+
+--------------------------------------------------------------------------------
+
+data MutateGovernorDatum = MutateGovernorDatum
+  { governorRef :: TxOutRef
+  , newDatum :: Datum
+  }
+  deriving stock (Show, GHC.Generic)
+  deriving anyclass (Generic)
+
+PlutusTx.makeLift ''MutateGovernorDatum
+PlutusTx.unstableMakeIsData ''MutateGovernorDatum
 
 --------------------------------------------------------------------------------
 
@@ -58,6 +75,9 @@ newtype PMutateGovernorDatum (s :: S)
   deriving
     (PlutusType, PIsData, PDataFields)
     via (PIsDataReprInstances PMutateGovernorDatum)
+
+instance PUnsafeLiftDecl PMutateGovernorDatum where type PLifted PMutateGovernorDatum = MutateGovernorDatum
+deriving via (DerivePConstantViaData MutateGovernorDatum PMutateGovernorDatum) instance (PConstant MutateGovernorDatum)
 
 --------------------------------------------------------------------------------
 
