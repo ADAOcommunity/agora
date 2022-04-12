@@ -26,18 +26,13 @@ module Agora.Utils (
   psingletonValue,
   pfindMap,
   pnotNull,
-  pisJust,
-  pisDJust,
 
   -- * Functions which should (probably) not be upstreamed
   anyOutput,
   allOutputs,
   anyInput,
   allInputs,
-  findTxOutByTxOutRef,
-  scriptHashFromAddress,
-  findOutputsToAddress,
-  findTxOutDatum,
+  isScriptAddress,
 ) where
 
 --------------------------------------------------------------------------------
@@ -52,8 +47,7 @@ import Plutarch.Api.V1 (
   PCurrencySymbol,
   PDatum,
   PDatumHash,
-  PMap,
-  PMaybeData (PDJust),
+  PMaybeData (PDJust, PDNothing),
   PPubKeyHash,
   PTokenName,
   PTuple,
@@ -61,8 +55,6 @@ import Plutarch.Api.V1 (
   PTxInfo (PTxInfo),
   PTxOut (PTxOut),
   PTxOutRef,
-  PValidatorHash,
-  PValue,
  )
 import Plutarch.Api.V1.AssocMap (PMap (PMap))
 import Plutarch.Api.V1.Value (PValue (PValue))
@@ -152,15 +144,6 @@ pfromMaybe = phoistAcyclic $
     pmatch a $ \case
       PJust a' -> a'
       PNothing -> e
-
--- | Yield True if a given PMaybe is of form PJust _.
-pisJust :: forall a s. Term s (PMaybe a :--> PBool)
-pisJust = phoistAcyclic $
-  plam $ \v' -> P.do
-    v <- pmatch v'
-    case v of
-      PJust _ -> pconstant True
-      PNothing -> pconstant False
 
 -- | Escape with a particular value on expecting 'Just'. For use in monadic context.
 pexpectJust ::
@@ -304,17 +287,6 @@ pfindTxInByTxOutRef = phoistAcyclic $
 pnotNull :: forall list a. PIsListLike list a => Term _ (list a :--> PBool)
 pnotNull = phoistAcyclic $ plam $ pelimList (\_ _ -> pcon PTrue) (pcon PFalse)
 
--- | Yield True if a given PMaybeData is of form PDJust _.
-pisDJust :: Term s (PMaybeData a :--> PBool)
-pisDJust = phoistAcyclic $
-  plam $ \x ->
-    pmatch
-      x
-      ( \case
-          PDJust _ -> pconstant True
-          _ -> pconstant False
-      )
-
 --------------------------------------------------------------------------------
 {- Functions which should (probably) not be upstreamed
    All of these functions are quite inefficient.
@@ -421,40 +393,16 @@ psingletonValue = phoistAcyclic $
         res = pcon $ PValue outerTup
      in res
 
--- | Finds the TxOut of an effect from TxInfo and TxOutRef
-findTxOutByTxOutRef :: Term s (PTxOutRef :--> PTxInfo :--> PMaybe PTxOut)
-findTxOutByTxOutRef = phoistAcyclic $
-  plam $ \txOutRef txInfo ->
-    pmatch (pfindTxInByTxOutRef # txOutRef # txInfo) $ \case
-      PJust ((pfield @"resolved" #) -> txOut) -> pcon $ PJust txOut
-      PNothing -> pcon PNothing
-
--- | Get script hash from an Address.
-scriptHashFromAddress :: Term s (PAddress :--> PMaybe PValidatorHash)
-scriptHashFromAddress = phoistAcyclic $
-  plam $ \addr ->
-    pmatch (pfromData $ pfield @"credential" # addr) $ \case
-      PScriptCredential ((pfield @"_0" #) -> h) -> pcon $ PJust h
-      _ -> pcon PNothing
-
--- | Find all TxOuts sent to an Address
-findOutputsToAddress :: Term s (PTxInfo :--> PAddress :--> PBuiltinList (PAsData PTxOut))
-findOutputsToAddress = phoistAcyclic $
-  plam $ \info address' -> P.do
-    address <- plet $ pdata address'
-    let outputs = pfromData $ pfield @"outputs" # info
-        filteredOutputs =
-          pfilter
-            # plam
-              (\(pfromData -> txOut) -> pfield @"address" # txOut #== address)
-            # outputs
-    filteredOutputs
-
--- | Find the data corresponding to a TxOut, if there is one
-findTxOutDatum :: Term s (PTxInfo :--> PTxOut :--> PMaybe PDatum)
-findTxOutDatum = phoistAcyclic $
-  plam $ \info out -> P.do
-    datumHash' <- pmatch $ pfromData $ pfield @"datumHash" # out
-    case datumHash' of
-      PDJust ((pfield @"_0" #) -> datumHash) -> pfindDatum # datumHash # info
-      _ -> pcon PNothing
+-- | Determine if an address is a script address
+isScriptAddress :: Term s (PAddress :--> PBool)
+isScriptAddress = phoistAcyclic $
+  plam $ \addr' -> P.do
+    address <- pletFields @'["credential", "stakingCredential"] addr'
+    scred <- pmatch $ pfromData address.stakingCredential
+    case scred of
+      PDNothing _ -> P.do
+        cred <- pmatch $ pfromData address.credential
+        case cred of
+          PScriptCredential _ -> pconstant True
+          _ -> pconstant False
+      _ -> pconstant False
