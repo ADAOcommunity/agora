@@ -15,7 +15,8 @@ module Agora.Governor (
 
   -- * Plutarch-land
   PGovernorDatum (..),
-
+  PGovernorRedeemer(..),
+  
   -- * Scripts
   governorPolicy,
   governorValidator,
