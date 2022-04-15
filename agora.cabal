@@ -126,6 +126,7 @@ library
     Agora.Governor
     Agora.MultiSig
     Agora.Proposal
+    Agora.Proposal.Time
     Agora.SafeMoney
     Agora.Stake
     Agora.Treasury
