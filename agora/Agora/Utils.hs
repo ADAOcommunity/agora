@@ -68,7 +68,6 @@ import Plutarch.Api.V1.AssocMap (PMap (PMap))
 import Plutarch.Api.V1.Value (PValue (PValue))
 import Plutarch.Builtin (ppairDataBuiltin)
 import Plutarch.Internal (punsafeCoerce)
-import Plutarch.List (pconvertLists)
 import Plutarch.Monadic qualified as P
 
 --------------------------------------------------------------------------------

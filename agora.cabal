@@ -129,6 +129,7 @@ library
     Agora.SafeMoney
     Agora.Stake
     Agora.Treasury
+    Agora.Effects.GovernorMutation
 
   other-modules:
     Agora.Utils
