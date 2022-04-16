@@ -28,6 +28,9 @@ module Agora.Proposal (
   -- * Scripts
   proposalValidator,
   proposalPolicy,
+
+  -- * Utils
+  pnextProposalId
 ) where
 
 import GHC.Generics qualified as GHC
@@ -280,3 +283,8 @@ proposalValidator :: Proposal -> ClosedTerm PValidator
 proposalValidator _ =
   plam $ \_datum _redeemer _ctx' -> P.do
     popaque (pconstant ())
+
+--------------------------------------------------------------------------------
+
+pnextProposalId :: Term s (PProposalId :--> PProposalId)
+pnextProposalId = phoistAcyclic $ plam $ \(pto -> id) -> pcon $ PProposalId $ id + 1
