@@ -112,7 +112,7 @@ mutateGovernorValidator cs = makeEffect cs $
       plam $ \info address -> P.do
         outputs <- plet $ findOutputsToAddress # info # address
         passert "Require exactly one output to the governor" $ plength # outputs #== 1
-        phead # outputs
+        pfromData $ phead # outputs
 
     mustFindGovOutputDatum :: Term s (PTxInfo :--> PTxOut :--> (PAsData PDatum))
     mustFindGovOutputDatum = phoistAcyclic $
