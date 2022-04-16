@@ -29,7 +29,13 @@ import Generics.SOP (Generic, I (I))
 
 --------------------------------------------------------------------------------
 
-import Agora.Proposal (PProposalId, PProposalThresholds, ProposalId, ProposalThresholds)
+import Agora.AuthorityToken (authorityTokensValidIn)
+import Agora.Proposal (
+  PProposalId,
+  PProposalThresholds,
+  ProposalId,
+  ProposalThresholds,
+ )
 import Agora.Utils (
   allInputs,
   findOutputsToAddress,
@@ -44,7 +50,13 @@ import Agora.Utils (
 --------------------------------------------------------------------------------
 
 import Plutarch (popaque)
-import Plutarch.Api.V1 (PCurrencySymbol, PMintingPolicy, PScriptPurpose (PSpending), PValidator, PValue)
+import Plutarch.Api.V1 (
+  PCurrencySymbol,
+  PMintingPolicy,
+  PScriptPurpose (PSpending),
+  PValidator,
+  PValue,
+ )
 import Plutarch.DataRepr (
   DerivePConstantViaData (..),
   PDataFields,
@@ -56,7 +68,6 @@ import Plutarch.Unsafe (punsafeCoerce)
 
 --------------------------------------------------------------------------------
 
-import Agora.AuthorityToken (authorityTokensValidIn)
 import Plutus.V1.Ledger.Value (AssetClass, CurrencySymbol)
 import PlutusTx qualified
 
