@@ -27,12 +27,14 @@ module Agora.Utils (
   pfindMap,
   pnotNull,
   pisJust,
+  pisDJust,
 
   -- * Functions which should (probably) not be upstreamed
   anyOutput,
   allOutputs,
   anyInput,
   allInputs,
+  findTxOutByTxOutRef,
   scriptHashFromAddress,
   findOutputsToAddress,
   findTxOutDatum,
@@ -50,6 +52,7 @@ import Plutarch.Api.V1 (
   PCurrencySymbol,
   PDatum,
   PDatumHash,
+  PMap,
   PMaybeData (PDJust),
   PPubKeyHash,
   PTokenName,
@@ -59,6 +62,7 @@ import Plutarch.Api.V1 (
   PTxOut (PTxOut),
   PTxOutRef,
   PValidatorHash,
+  PValue,
  )
 import Plutarch.Api.V1.AssocMap (PMap (PMap))
 import Plutarch.Api.V1.Value (PValue (PValue))
@@ -150,7 +154,7 @@ pfromMaybe = phoistAcyclic $
       PJust a' -> a'
       PNothing -> e
 
--- | Yield True is a given PMaybe is of form PJust _
+-- | Yield True if a given PMaybe is of form PJust _.
 pisJust :: forall a s. Term s (PMaybe a :--> PBool)
 pisJust = phoistAcyclic $
   plam $ \v' -> P.do
@@ -301,6 +305,17 @@ pfindTxInByTxOutRef = phoistAcyclic $
 pnotNull :: forall list a. PIsListLike list a => Term _ (list a :--> PBool)
 pnotNull = phoistAcyclic $ plam $ pelimList (\_ _ -> pcon PTrue) (pcon PFalse)
 
+-- | Yield True if a given PMaybeData is of form PDJust _.
+pisDJust :: Term s (PMaybeData a :--> PBool)
+pisDJust = phoistAcyclic $
+  plam $ \x ->
+    pmatch
+      x
+      ( \case
+          PDJust _ -> pconstant True
+          _ -> pconstant False
+      )
+
 --------------------------------------------------------------------------------
 {- Functions which should (probably) not be upstreamed
    All of these functions are quite inefficient.
@@ -407,31 +422,36 @@ psingletonValue = phoistAcyclic $
         res = pcon $ PValue outerTup
      in res
 
+-- | Finds the TxOut of an effect from TxInfo and TxOutRef
+findTxOutByTxOutRef :: Term s (PTxOutRef :--> PTxInfo :--> PMaybe PTxOut)
+findTxOutByTxOutRef = phoistAcyclic $
+  plam $ \txOutRef txInfo ->
+    pmatch (pfindTxInByTxOutRef # txOutRef # txInfo) $ \case
+      PJust ((pfield @"resolved" #) -> txOut) -> pcon $ PJust txOut
+      PNothing -> pcon PNothing
+
 -- | Get script hash from an Address.
 scriptHashFromAddress :: Term s (PAddress :--> PMaybe PValidatorHash)
 scriptHashFromAddress = phoistAcyclic $
-  plam $ \addr -> P.do
-    cred <- pmatch $ pfromData $ pfield @"credential" # addr
-    case cred of
-      PScriptCredential h -> pcon $ PJust $ pfield @"_0" # h
+  plam $ \addr ->
+    pmatch (pfromData $ pfield @"credential" # addr) $ \case
+      PScriptCredential ((pfield @"_0" #) -> h) -> pcon $ PJust h
       _ -> pcon PNothing
 
 -- | Find all TxOuts sent to an Address
-findOutputsToAddress :: Term s (PTxInfo :--> PAddress :--> PList PTxOut)
+findOutputsToAddress :: Term s (PTxInfo :--> PAddress :--> PBuiltinList (PAsData PTxOut))
 findOutputsToAddress = phoistAcyclic $
   plam $ \info address' -> P.do
     address <- plet $ pdata address'
     let outputs = pfromData $ pfield @"outputs" # info
         filteredOutputs =
           pfilter
-            # ( plam $ \(pfromData -> txOut) -> P.do
-                  selfAddress <- plet $ pfield @"address" # txOut
-                  selfAddress #== address
-              )
+            # plam
+              (\(pfromData -> txOut) -> pfield @"address" # txOut #== address)
             # outputs
-    pmap @PList # plam pfromData #$ pconvertLists # filteredOutputs
+    filteredOutputs
 
--- | Find datum in a TxOut
+-- | Find the data corresponding to a TxOut, if there is one
 findTxOutDatum :: Term s (PTxInfo :--> PTxOut :--> PMaybe PDatum)
 findTxOutDatum = phoistAcyclic $
   plam $ \info out -> P.do

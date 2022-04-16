@@ -123,7 +123,6 @@ library
   exposed-modules:
     Agora.AuthorityToken
     Agora.Effect
-    Agora.Effects.GovernorMutation
     Agora.Governor
     Agora.MultiSig
     Agora.Proposal
