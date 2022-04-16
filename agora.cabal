@@ -78,6 +78,7 @@ common lang
     UndecidableInstances
     ViewPatterns
     OverloadedRecordDot
+    OverloadedLabels
     QualifiedDo
 
   default-language:   Haskell2010
@@ -130,6 +131,7 @@ library
     Agora.SafeMoney
     Agora.Stake
     Agora.Treasury
+    Agora.Record
 
   other-modules:
     Agora.Utils
