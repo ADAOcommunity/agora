@@ -35,7 +35,7 @@ import Plutarch.Monadic qualified as P
 
 --------------------------------------------------------------------------------
 
-import Plutus.V1.Ledger.Api (CurrencySymbol, Datum, TxOutRef)
+import Plutus.V1.Ledger.Api (CurrencySymbol, TxOutRef)
 import PlutusTx qualified
 
 --------------------------------------------------------------------------------
@@ -43,18 +43,19 @@ import PlutusTx qualified
 import Agora.Effect (makeEffect)
 import Agora.Utils (findOutputsToAddress, findTxOutDatum, passert, pfindTxInByTxOutRef, pisJust, scriptHashFromAddress)
 import Plutarch.Lift (PLifted, PUnsafeLiftDecl)
+import Agora.Governor (GovernorDatum, PGovernorDatum)
+import Plutarch.Builtin (pforgetData)
 
 --------------------------------------------------------------------------------
 
 data MutateGovernorDatum = MutateGovernorDatum
   { governorRef :: TxOutRef
-  , newDatum :: Datum
+  , newDatum :: GovernorDatum
   }
   deriving stock (Show, GHC.Generic)
   deriving anyclass (Generic)
 
-PlutusTx.makeLift ''MutateGovernorDatum
-PlutusTx.unstableMakeIsData ''MutateGovernorDatum
+PlutusTx.makeIsDataIndexed ''MutateGovernorDatum[('MutateGovernorDatum, 0)]
 
 --------------------------------------------------------------------------------
 
@@ -64,7 +65,7 @@ newtype PMutateGovernorDatum (s :: S)
           s
           ( PDataRecord
               '[ "governorRef" ':= PTxOutRef
-               , "newDatum" ':= PDatum
+               , "newDatum" ':= PGovernorDatum
                ]
           )
       )
@@ -93,9 +94,9 @@ mutateGovernorValidator cs = makeEffect cs $
     govAddress <- plet $ pfield @"address" # govIn
     passert "Governor address should be a script address " $ pisJust #$ scriptHashFromAddress # govAddress
 
-    govOut <- plet $ mustFindOutputToGovernor # txInfo # govAddress
-    govOutDatum <- plet $ mustFindGovOutputDatum # txInfo # govOut
-    passert "Wrong datum output to the governor" $ mutation.newDatum #== govOutDatum
+    let govOut = mustFindOutputToGovernor # txInfo # govAddress
+        govOutDatum = pforgetData $ mustFindGovOutputDatum # txInfo # govOut
+    passert "Wrong datum output to the governor" $ pforgetData mutation.newDatum #== govOutDatum
 
     popaque $ pconstant ()
   where
