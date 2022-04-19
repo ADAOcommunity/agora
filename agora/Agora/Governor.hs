@@ -202,7 +202,7 @@ governorValidator params =
     newParams <- pletFields @'["proposalThresholds", "nextProposalId"] newDatum'
 
     mint <- plet $ pfromData $ pfield @"mint" # txInfo
-    mint' <- plet $ pto $ pto $ pto $ mint
+    mint' <- plet $ pto $ pto $ pto mint
 
     case redeemer of
       PCreateProposal _ -> P.do
