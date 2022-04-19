@@ -440,7 +440,8 @@ ptokenSpent =
   plam $ \tokenClass inputs ->
     0
       #< pfoldr @PBuiltinList
-        # ( plam $ \txInInfo' acc -> P.do
+        # plam
+          ( \txInInfo' acc -> P.do
               PTxInInfo txInInfo <- pmatch (pfromData txInInfo')
               PTxOut txOut' <- pmatch $ pfromData $ pfield @"resolved" # txInInfo
               txOut <- pletFields @'["value"] txOut'
