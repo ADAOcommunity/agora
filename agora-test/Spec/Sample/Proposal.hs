@@ -47,7 +47,7 @@ import Plutus.V1.Ledger.Value qualified as Value
 --------------------------------------------------------------------------------
 
 import Agora.Governor (
-  Governor (Governor),
+  Governor (..),
   GovernorDatum (GovernorDatum, nextProposalId, proposalThresholds),
   governorPolicy,
   governorValidator,
@@ -59,8 +59,9 @@ import Spec.Util (datumPair, toDatumHash)
 
 --------------------------------------------------------------------------------
 
+-- FIXME: use mock parameters
 governor :: Governor
-governor = Governor
+governor = undefined
 
 govPolicy :: MintingPolicy
 govPolicy = mkMintingPolicy (governorPolicy governor)

@@ -29,6 +29,7 @@ module Agora.Utils (
   pownCurrencySymbol,
   pisUxtoSpent,
   ptokenSpent,
+  passetClassValueOf',
 
   -- * Functions which should (probably) not be upstreamed
   anyOutput,

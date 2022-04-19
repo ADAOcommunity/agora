@@ -46,7 +46,6 @@ import Agora.Utils (
   findOutputsToAddress,
   findTxOutDatum,
   passert,
-  passetClassValueOf,
   passetClassValueOf',
   pfindTxInByTxOutRef,
   pisDJust,
@@ -67,7 +66,7 @@ import Plutarch.Api.V1 (
   mintingPolicySymbol,
   mkMintingPolicy,
  )
-import Plutarch.Api.V1.Extra (pownMintValue)
+import Plutarch.Api.V1.Extra (passetClass, passetClassValueOf, pownMintValue)
 import Plutarch.DataRepr (
   DerivePConstantViaData (..),
   PDataFields,
@@ -96,8 +95,6 @@ data GovernorDatum = GovernorDatum
 
 PlutusTx.makeIsDataIndexed ''GovernorDatum [('GovernorDatum, 0)]
 
-PlutusTx.makeIsDataIndexed ''GovernorDatum [('GovernorDatum, 0)]
-
 {- | Redeemer for Governor script. The governor has two primary
      responsibilities:
 
@@ -122,8 +119,6 @@ PlutusTx.makeIsDataIndexed
   , ('MintGATs, 1)
   , ('MutateMutateGovernor, 2)
   ]
-
-PlutusTx.makeIsDataIndexed ''GovernorRedeemer [('CreateProposal, 0), ('MintGATs, 1)]
 
 -- | Parameters for creating Governor scripts.
 data Governor = Governor
@@ -190,14 +185,15 @@ governorPolicy params =
     ctx <- pletFields @'["txInfo", "purpose"] ctx'
     let oref = pconstant params.stORef
         ownSymbol = pownCurrencySymbol # ctx'
+        ownAssetClass = passetClass # ownSymbol # pconstant governorStateTokenName
 
     mintValue <- plet $ pownMintValue # ctx'
 
-    passert "Referenced utxo should be spent" $ pisUxtoSpent # oref # ctx.txInfo
+    passert "Referenced utxo should be spent" $
+      pisUxtoSpent # oref # ctx.txInfo
 
     passert "Exactly one token should be minted" $
-      psymbolValueOf # ownSymbol # mintValue #== 1
-        #&& passetClassValueOf # ownSymbol # pconstant governorStateTokenName # mintValue #== 1
+      passetClassValueOf # mintValue # ownAssetClass #== 1
 
     passert "Nothing is minted other than the state token" $
       (plength #$ pto $ pto $ pto mintValue) #== 1
