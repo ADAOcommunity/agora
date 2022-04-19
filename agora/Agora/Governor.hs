@@ -212,9 +212,10 @@ governorPolicy params =
    For 'CreateProposal' redeemer, it will check:
     - Exactly one proposal token is minted.
     - The datum which is corresponding to the proposal token must be correct.
-  
+    - Proposal id in the governor datum must be advanced.
+
    TODO: PMintGATs
-   
+
    For 'PMutateGovernor', it will check:
     - A GAT is burnt.
     - Said GAT must be tagged by the effect that is spending it.
