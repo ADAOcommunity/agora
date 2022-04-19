@@ -12,7 +12,6 @@ module Agora.Effect (
 
 import Agora.AuthorityToken (singleAuthorityTokenBurned)
 import Agora.Utils (passert)
-import Plutarch (popaque)
 import Plutarch.Api.V1 (PCurrencySymbol, PScriptPurpose (PSpending), PTxInfo, PTxOutRef, PValidator, PValue)
 import Plutarch.Internal (punsafeCoerce)
 import Plutarch.Monadic qualified as P
