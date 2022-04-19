@@ -35,7 +35,7 @@ import Agora.Proposal (
   PProposalThresholds,
   ProposalId,
   ProposalThresholds,
-  pnextProposalId 
+  pnextProposalId,
  )
 import Agora.Utils (
   allInputs,
