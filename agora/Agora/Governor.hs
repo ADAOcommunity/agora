@@ -96,6 +96,8 @@ data GovernorDatum = GovernorDatum
 
 PlutusTx.makeIsDataIndexed ''GovernorDatum [('GovernorDatum, 0)]
 
+PlutusTx.makeIsDataIndexed ''GovernorDatum [('GovernorDatum, 0)]
+
 {- | Redeemer for Governor script. The governor has two primary
      responsibilities:
 
@@ -120,6 +122,8 @@ PlutusTx.makeIsDataIndexed
   , ('MintGATs, 1)
   , ('MutateMutateGovernor, 2)
   ]
+
+PlutusTx.makeIsDataIndexed ''GovernorRedeemer [('CreateProposal, 0), ('MintGATs, 1)]
 
 -- | Parameters for creating Governor scripts.
 data Governor = Governor

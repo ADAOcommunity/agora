@@ -9,6 +9,7 @@ import Test.Tasty (defaultMain, testGroup)
 --------------------------------------------------------------------------------
 
 import Spec.Model.MultiSig qualified as MultiSig
+import Spec.Proposal qualified as Proposal
 import Spec.Stake qualified as Stake
 
 -- | The Agora test suite.
@@ -20,6 +21,9 @@ main =
       [ testGroup
           "Stake tests"
           Stake.tests
+      , testGroup
+          "Proposal tests"
+          Proposal.tests
       , testGroup
           "Multisig tests"
           [ testGroup
