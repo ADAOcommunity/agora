@@ -286,14 +286,15 @@ governorValidator params =
 
     case redeemer of
       PCreateProposal _ -> P.do
+        pSym <- plet $ pconstant proposalSymbol
+
         -- check that proposal is advanced
         passert "Proposal id should be advanced by 1" $
           pnextProposalId # oldParams.nextProposalId #== newParams.nextProposalId
 
         -- check that exactly one proposal token is minted
-        pps <- plet $ pconstant proposalSymbol
         passert "Exactly one proposal token must be minted" $
-          hasOnlyOneTokenOfCurrencySymbol # pps # mint
+          hasOnlyOneTokenOfCurrencySymbol # pSym # mint
 
         outputs <- plet $ findOutputsToAddress # ctx.txInfo # pconstant proposalValidatorAddress
         passert "Exactly one utxo should be sent to the proposal validator" $
@@ -301,7 +302,7 @@ governorValidator params =
 
         output <- pletFields @'["value", "datumHash"] $ phead # outputs
         passert "The proposal state token must be sent to the proposal validator" $
-          psymbolValueOf # pconstant proposalSymbol # output.value #== 1
+          psymbolValueOf # pSym # output.value #== 1
 
         passert "The utxo paid to the proposal validator must have datum" $
           pisDJust # output.datumHash
