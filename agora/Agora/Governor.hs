@@ -282,17 +282,14 @@ governorValidator params =
     newParams <- pletFields @'["proposalThresholds", "nextProposalId"] newDatum'
 
     mint <- plet $ pfromData $ pfield @"mint" # txInfo
-    mint' <- plet $ pto $ pto $ pto mint
 
     case redeemer of
       PCreateProposal _ -> P.do
         pSym <- plet $ pconstant proposalSymbol
 
-        -- check that proposal is advanced
         passert "Proposal id should be advanced by 1" $
           pnextProposalId # oldParams.nextProposalId #== newParams.nextProposalId
 
-        -- check that exactly one proposal token is minted
         passert "Exactly one proposal token must be minted" $
           hasOnlyOneTokenOfCurrencySymbol # pSym # mint
 
@@ -346,14 +343,12 @@ governorValidator params =
         -- TODO: waiting for impl of proposal
         ptraceError "Not implemented yet"
       PMutateGovernor _ -> P.do
-        -- check that input has exactly one GAT and will be burnt
         let gatAmount = psymbolValueOf # gatS # mint
         passert "One GAT should be burnt" $
           gatAmount #== -1
 
-        -- nothing should be minted/burnt other than GAT
         passert "No token should be minted/burnt other than GAT" $
-          plength # mint' #== 1
+          (plength #$ pto $ pto $ pto mint) #== 1
 
         -- check that GAT is tagged by the address
         passert "all input GATs are valid" $
