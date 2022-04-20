@@ -44,6 +44,8 @@ import Agora.Proposal (
   ProposalVotes (..),
   ResultTag (..),
  )
+import Agora.Stake (Stake (..), StakeDatum (StakeDatum))
+import Plutarch.SafeMoney (Tagged (Tagged), untag)
 import PlutusTx.AssocMap qualified as AssocMap
 import Spec.Sample.Shared
 import Spec.Util (datumPair, toDatumHash)
@@ -156,9 +158,12 @@ cosignProposal newSigners =
           , thresholds = defaultProposalThresholds
           , votes = ProposalVotes AssocMap.empty
           }
+      stakeDatum :: StakeDatum
+      stakeDatum = StakeDatum (Tagged 50_000_000) signer2 []
       proposalAfter :: ProposalDatum
       proposalAfter = proposalBefore {cosigners = newSigners <> proposalBefore.cosigners}
-      proposalRef = (TxOutRef "0b2086cbf8b6900f8cb65e012de4516cb66b5cb08a9aaba12a8b88be" 1)
+      proposalRef = TxOutRef "0b2086cbf8b6900f8cb65e012de4516cb66b5cb08a9aaba12a8b88be" 1
+      stakeRef = TxOutRef "0ca36f3a357bc69579ab2531aecd1e7d3714d993c7820f40b864be15" 0
    in ScriptContext
         { scriptContextTxInfo =
             TxInfo
@@ -173,6 +178,18 @@ cosignProposal newSigners =
                               , Value.singleton "" "" 10_000_000
                               ]
                         , txOutDatumHash = Just (toDatumHash proposalBefore)
+                        }
+                  , TxInInfo
+                      stakeRef
+                      TxOut
+                        { txOutAddress = stakeAddress
+                        , txOutValue =
+                            mconcat
+                              [ Value.singleton "" "" 10_000_000
+                              , Value.assetClassValue (untag stake.gtClassRef) 50_000_000
+                              , Value.singleton stakeSymbol "" 1
+                              ]
+                        , txOutDatumHash = Just (toDatumHash stakeDatum)
                         }
                   ]
               , txInfoOutputs =

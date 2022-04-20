@@ -29,6 +29,8 @@ import Agora.Proposal (
   thresholds,
   votes,
  )
+import Agora.Stake (StakeDatum (StakeDatum), StakeRedeemer (WitnessStake), stakeValidator)
+import Plutarch.SafeMoney (Tagged (Tagged))
 import PlutusTx.AssocMap qualified as AssocMap
 import Spec.Sample.Proposal qualified as Proposal
 import Spec.Sample.Shared (signer, signer2)
@@ -48,30 +50,39 @@ tests =
   [ testGroup
       "policy"
       [ policySucceedsWith
-          "stakeCreation"
+          "proposalCreation"
           (proposalPolicy Shared.proposal)
           ()
           Proposal.proposalCreation
       ]
   , testGroup
       "validator"
-      [ validatorSucceedsWith
-          "stakeCreation"
-          (proposalValidator Shared.proposal)
-          ( ProposalDatum
-              { proposalId = ProposalId 0
-              , effects =
-                  AssocMap.fromList
-                    [ (ResultTag 0, [])
-                    , (ResultTag 1, [])
-                    ]
-              , status = Draft
-              , cosigners = [signer]
-              , thresholds = Shared.defaultProposalThresholds
-              , votes = ProposalVotes AssocMap.empty
-              }
-          )
-          (Cosign [signer2])
-          (Proposal.cosignProposal [signer2])
+      [ testGroup
+          "cosignature"
+          [ validatorSucceedsWith
+              "proposal"
+              (proposalValidator Shared.proposal)
+              ( ProposalDatum
+                  { proposalId = ProposalId 0
+                  , effects =
+                      AssocMap.fromList
+                        [ (ResultTag 0, [])
+                        , (ResultTag 1, [])
+                        ]
+                  , status = Draft
+                  , cosigners = [signer]
+                  , thresholds = Shared.defaultProposalThresholds
+                  , votes = ProposalVotes AssocMap.empty
+                  }
+              )
+              (Cosign [signer2])
+              (Proposal.cosignProposal [signer2])
+          , validatorSucceedsWith
+              "stake"
+              (stakeValidator Shared.stake)
+              (StakeDatum (Tagged 50_000_000) signer2 [])
+              WitnessStake
+              (Proposal.cosignProposal [signer2])
+          ]
       ]
   ]
