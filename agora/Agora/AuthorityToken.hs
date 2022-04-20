@@ -20,6 +20,7 @@ import Plutarch.Api.V1 (
   PScriptPurpose (..),
   PTxInfo (..),
   PTxOut (..),
+  PMintingPolicy
  )
 import Plutarch.Api.V1.AssocMap (PMap (PMap))
 import Plutarch.Api.V1.Value (PValue (PValue))
@@ -40,6 +41,7 @@ import Agora.Utils (
   ptokenSpent,
  )
 import Plutarch.Api.V1.Extra (passetClass, passetClassValueOf)
+import Plutarch (popaque)
 
 --------------------------------------------------------------------------------
 
@@ -114,9 +116,7 @@ singleAuthorityTokenBurned gatCs txInfo mint = P.do
     ]
 
 -- | Policy given 'AuthorityToken' params.
-authorityTokenPolicy ::
-  AuthorityToken ->
-  Term s (PData :--> PScriptContext :--> PUnit)
+authorityTokenPolicy :: AuthorityToken -> ClosedTerm PMintingPolicy
 authorityTokenPolicy params =
   plam $ \_redeemer ctx' ->
     pmatch ctx' $ \(PScriptContext ctx') -> P.do
@@ -142,6 +142,6 @@ authorityTokenPolicy params =
                 authorityTokensValidIn
                   # ownSymbol
                   # txOut
-            pconstant ()
+            popaque $ pconstant ()
         )
-        (pconstant ())
+        (popaque $ pconstant ())
