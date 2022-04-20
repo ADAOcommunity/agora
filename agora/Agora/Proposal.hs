@@ -249,8 +249,9 @@ PlutusTx.makeIsDataIndexed
   ]
 
 -- | Parameters that identify the Proposal validator script.
-newtype Proposal = Proposal
+data Proposal = Proposal
   { governorSTAssetClass :: AssetClass
+  , stakeSTAssetClass :: AssetClass
   }
   deriving stock (Show, Eq)
 
@@ -512,7 +513,7 @@ proposalValidator proposal =
               foldr1
                 (#&&)
                 [ ptraceIfFalse "Datum must be correct" $ correctDatum
-                , ptraceIfFalse "Value shouldn't change" $ pdata txOutF.value #== pdata newValue
+                , ptraceIfFalse "Value should be correct" $ pdata txOutF.value #== pdata newValue
                 , ptraceIfFalse "Must be sent to Proposal's address" $ ownAddress #== pdata address
                 ]
 
