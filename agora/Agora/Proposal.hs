@@ -464,7 +464,10 @@ proposalValidator proposal =
     ownAddress <- plet $ txOutF.address
 
     stCurrencySymbol <- plet $ pconstant $ mintingPolicySymbol $ mkMintingPolicy (proposalPolicy proposal)
-    spentST <- plet $ psymbolValueOf # stCurrencySymbol #$ pvalueSpent # txInfoF.inputs
+    valueSpent <- plet $ pvalueSpent # txInfoF.inputs
+    spentST <- plet $ psymbolValueOf # stCurrencySymbol #$ valueSpent
+    let AssetClass (stakeSym, stakeTn) = proposal.stakeSTAssetClass
+    spentStakeST <- plet $ passetClassValueOf # valueSpent # (passetClass # pconstant stakeSym # pconstant stakeTn)
 
     pmatch proposalRedeemer $ \case
       PVote _r -> P.do
@@ -481,6 +484,9 @@ proposalValidator proposal =
 
         passert "Signed by all new cosigners" $
           pall # plam (\sig -> ptxSignedBy # ctx.txInfo # sig) # newSigs
+
+        passert "As many new cosigners as Stake datums" $
+          spentStakeST #== plength # newSigs
 
         passert "Signatures are correctly added to cosignature list" $
           anyOutput @PProposalDatum # ctx.txInfo

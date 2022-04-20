@@ -30,8 +30,9 @@ import Agora.Proposal (
   votes,
  )
 import PlutusTx.AssocMap qualified as AssocMap
-import Spec.Sample.Proposal (propThresholds, signer, signer2)
 import Spec.Sample.Proposal qualified as Proposal
+import Spec.Sample.Shared (signer, signer2)
+import Spec.Sample.Shared qualified as Shared
 import Spec.Util (policySucceedsWith, validatorSucceedsWith)
 import Test.Tasty (TestTree, testGroup)
 
@@ -48,7 +49,7 @@ tests =
       "policy"
       [ policySucceedsWith
           "stakeCreation"
-          (proposalPolicy Proposal.proposal)
+          (proposalPolicy Shared.proposal)
           ()
           Proposal.proposalCreation
       ]
@@ -56,7 +57,7 @@ tests =
       "validator"
       [ validatorSucceedsWith
           "stakeCreation"
-          (proposalValidator Proposal.proposal)
+          (proposalValidator Shared.proposal)
           ( ProposalDatum
               { proposalId = ProposalId 0
               , effects =
@@ -66,7 +67,7 @@ tests =
                     ]
               , status = Draft
               , cosigners = [signer]
-              , thresholds = propThresholds
+              , thresholds = Shared.defaultProposalThresholds
               , votes = ProposalVotes AssocMap.empty
               }
           )
