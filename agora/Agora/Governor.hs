@@ -33,7 +33,7 @@ import Generics.SOP (Generic, I (I))
 
 --------------------------------------------------------------------------------
 
-import Agora.AuthorityToken (authorityTokensValidIn)
+import Agora.AuthorityToken (singleAuthorityTokenBurned)
 import Agora.Proposal (
   PProposalDatum,
   PProposalId,
@@ -47,7 +47,6 @@ import Agora.Proposal (
   proposalValidator,
  )
 import Agora.Utils (
-  allInputs,
   findOutputsToAddress,
   hasOnlyOneTokenOfCurrencySymbol,
   mustFindDatum',
@@ -58,6 +57,7 @@ import Agora.Utils (
   pisUxtoSpent,
   pownCurrencySymbol,
   psymbolValueOf,
+  containsSingleCurrencySymbol
  )
 
 --------------------------------------------------------------------------------
@@ -216,7 +216,7 @@ governorPolicy params =
       passetClassValueOf # mintValue # ownAssetClass #== 1
 
     passert "Nothing is minted other than the state token" $
-      (plength #$ pto $ pto $ pto mintValue) #== 1
+      containsSingleCurrencySymbol # mintValue
 
     popaque (pconstant ())
 
@@ -332,30 +332,25 @@ governorValidator params =
         passert "Initial proposal cosigners should be empty" $
           pnull #$ pfromData proposalParams.cosigners
 
+        -- TODO: proposal impl not done yet
         ptraceError "Not implemented yet"
       PMintGATs _ -> P.do
         -- check datum is not changed
         passert "Datum should not be changed" $
           (pforgetData $ pdata newDatum') #== datum'
 
+        -- TODO: any need to check the proposal datum here?
+
         -- check exactly one(?) authority token is minted
 
         -- TODO: waiting for impl of proposal
         ptraceError "Not implemented yet"
       PMutateGovernor _ -> P.do
-        let gatAmount = psymbolValueOf # gatS # mint
-        passert "One GAT should be burnt" $
-          gatAmount #== -1
-
         passert "No token should be minted/burnt other than GAT" $
-          (plength #$ pto $ pto $ pto mint) #== 1
+          containsSingleCurrencySymbol # mint
+        
+        popaque $ singleAuthorityTokenBurned gatSym ctx.txInfo mint
 
-        -- check that GAT is tagged by the address
-        passert "all input GATs are valid" $
-          allInputs @PUnit # txInfo #$ plam $ \txOut _ _ _ ->
-            authorityTokensValidIn # gatS # txOut
-
-        popaque $ pconstant ()
   where
     stateTokenAssetClass :: AssetClass
     stateTokenAssetClass = governorStateTokenAssetClass params
@@ -384,8 +379,8 @@ governorValidator params =
     stateTokenValueOf :: Term s (PValue :--> PInteger)
     stateTokenValueOf = passetClassValueOf' stateTokenAssetClass
 
-    gatS :: Term s PCurrencySymbol
-    gatS = pconstant params.gatSymbol
+    gatSym :: Term s PCurrencySymbol
+    gatSym = pconstant params.gatSymbol
 
 --------------------------------------------------------------------------------
 
