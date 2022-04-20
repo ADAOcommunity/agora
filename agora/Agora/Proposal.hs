@@ -435,6 +435,7 @@ proposalValidator _ =
     popaque (pconstant ())
 
 --------------------------------------------------------------------------------
+
 -- | Get next proposal id.
 pnextProposalId :: Term s (PProposalId :--> PProposalId)
 pnextProposalId = phoistAcyclic $ plam $ \(pto -> pid) -> pcon $ PProposalId $ pid + 1
