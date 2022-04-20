@@ -8,8 +8,9 @@ import Test.Tasty (defaultMain, testGroup)
 
 --------------------------------------------------------------------------------
 
-import Spec.Model.MultiSig qualified as MultiSig
+-- import Spec.Model.MultiSig qualified as MultiSig
 import Spec.Stake qualified as Stake
+import Spec.Effect.TreasuryWithdrawalEffect qualified as TWE
 
 -- | The Agora test suite.
 main :: IO ()
@@ -28,4 +29,10 @@ main =
               , MultiSig.genTests
               ]
           ]
+      , testGroup
+          "Effects"
+          [ testGroup
+              "Treasury Withdrawal Effect"
+              TWE.tests
+          ]                  
       ]
